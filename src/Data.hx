@@ -77,7 +77,6 @@ class Data implements haxe.Public
 		xml = new haxe.xml.Fast( haxe.xml.Parser.parse( haxe.Resource.getString( "asset")) );
 		
 		gd = xml.node.gd;
-		trace(gd.att.check);
 		tileDef = xml.node.tileDef;
 		
 		tileLib = new SpriteLib(tiles);
@@ -188,6 +187,11 @@ class Data implements haxe.Public
 			}
 		}
 		
+		pnjPhrases = Ods.pnj.copy();
+	}
+	
+	public function reset()
+	{
 		pnjPhrases = Ods.pnj.copy();
 	}
 	

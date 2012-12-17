@@ -73,7 +73,7 @@ class Entity  implements haxe.Public
 			else
 			{
 				bump(cx + 1, cy);
-				rx -= 0.1;
+				rx -= 0.05;
 				dx = 0;
 				m();
 			}
@@ -90,7 +90,7 @@ class Entity  implements haxe.Public
 			else
 			{
 				bump(cx - 1, cy);
-				rx += 0.1;
+				rx += 0.05;
 				dx = 0;
 				m();
 			}
@@ -156,16 +156,32 @@ class Entity  implements haxe.Public
 			
 		if (  Math.abs( dy ) < 1e-3 )
 			dy = 0;
-		
-		while (updateX() || updateY())
-		{
 			
+		
+		#if debug
+		if (Std.is(this, Char))
+		{
+			//var i = 0;
+			//trace("cx:"+cx+" cy:"+cy+" dx:"+dx+" dy:"+dy+" rx:"+rx+" ry:"+ry);
+		}
+		#end
+		
+		var uy = updateY();
+		var ux = updateX();
+		while(ux||uy)
+		{
+			uy = updateY();
+			ux = updateX();
 		}
 		
 		var hasFoot = test(cx, cy+1 );
 		if ( hasFoot )
 		{
-			if (falling)
+			if (falling
+			//
+			&& dy > 0.0005
+			&& ry > 0.9
+			)
 			{
 				dy = 0;
 				ry = 1.0;
@@ -178,20 +194,26 @@ class Entity  implements haxe.Public
 		else
 		{
 			dy += 0.005; 
-			if ( dy > 0.15)
-				dy = 0.15;
+			if ( dy > 0.125)
+				dy = 0.125;
 			falling = true; 
 			onFall();
 		}
 		
-		el.x = Std.int((cx << 4) + rx * 16.0);
-		el.y = Std.int((cy << 4) + ry * 16.0);
+		syncPos();
 		
 		if(dx!=0)
 			el.scaleX = dx < 0 ? -1 : 1;
 		
 	}
 	
+	public inline function syncPos()
+	{
+		el.x = Std.int((cx << 4) + rx * 16.0);
+		el.y = Std.int((cy << 4) + ry * 16.0);
+	}
+		
+		
 	public function kill()
 	{
 		

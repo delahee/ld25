@@ -97,7 +97,7 @@ class M implements haxe.Public
 	static var prevFrame = -1;
 	static function preUpdate(_)
 	{
-		if ( prevFrame == intro.currentFrame || Key.isDown(K.S) )
+		if ( prevFrame == intro.currentFrame #if debug || Key.isDown(K.S) #end )
 		{
 			SoundMixer.stopAll();
 			intro.stop();
@@ -199,15 +199,23 @@ class M implements haxe.Public
 		
 	}
 	
+	static var exiting = false;
 	static function termUpdate(_)
 	{
 		pix.Element.updateAnims();
+		if ( Key.isDown(K.SPACE) || Key.isDown(K.CONTROL))
+		{
+			exiting = true;
+			reset();
+			Lib.current.removeEventListener( flash.events.Event.ENTER_FRAME, termUpdate);
+			exiting = false;
+		}
 	}
 	
 	
 	static function titleUpdate(_)
 	{
-		if ( Key.isDown( K.SPACE ) )
+		if ( Key.isDown( K.SPACE ) || Key.isDown(K.CONTROL))
 		{
 			Lib.current.removeEventListener( flash.events.Event.ENTER_FRAME, titleUpdate );
 			titleScreen.stop();
@@ -250,17 +258,18 @@ class M implements haxe.Public
 	}
 	
 	
-	static function startup()
+	static function reset()
 	{
-		if(CHANGE_FPS)
-			Lib.current.stage.frameRate = BASE_FPS;
-		
-		ui = new Ui();
-		stats = new volute.com.Stats();
-		bb.addChild( ui.root );
-		
-		bbLevelRoot = new flash.display.Sprite();
+		bb.removeChildren();
 		bb.addChild(bbLevelRoot);
+		M.data.reset();
+		if(levels!=null)
+		for( l in levels)
+		{
+			l.kill();
+		}
+		bbLevelRoot.removeChildren();
+		
 		char = new Char();
 		levels = [];
 		levels.push( new Level(0) );
@@ -270,14 +279,30 @@ class M implements haxe.Public
 		for(l in levels)
 			l.root.visible = false;
 		setLevel(1);
-		
-		//stats.y -= 200;
-		//ui.root.addChild( stats );
-		ui.root.toFront();
-
-		trace("started");
-		Lib.current.addEventListener( flash.events.Event.ENTER_FRAME, update);
+		bbLevelRoot.x = 0;
+		nextLevel = null;
+			
 		new Music().play();
+		
+		Lib.current.addEventListener( flash.events.Event.ENTER_FRAME, update);
+		
+		score.detach();
+		souls.detach();
+		player.detach();
+		received.detach();
+		thanks.detach(); 
+		ui = new Ui();
+		bb.addChild( ui.root );
+		ui.root.toFront();
+	}
+	
+	static function startup()
+	{
+		if(CHANGE_FPS)
+			Lib.current.stage.frameRate = BASE_FPS;
+		stats = new volute.com.Stats();
+		bbLevelRoot = new flash.display.Sprite();
+		reset();
 	}
 	
 	static function setLevel(i:Int)
@@ -304,17 +329,23 @@ class M implements haxe.Public
 	public static var slow_every = 10;
 	static var slow =  0;
 	static var fr  = 0;
+	static var enableSlow = false;
 	
 	static function update(_)
 	{
 		fr++;
-		/*
-		slow++;
-		if ( slow != slow_every )
-			return;
-		else
-			slow = 0;
-			*/
+		
+		#if debug
+		if (enableSlow)
+		{
+			slow++;
+			if ( slow != slow_every )
+				return;
+			else
+				slow = 0;
+		}
+		#end	
+		
 		if (level == null )
 			return;
 			
@@ -330,6 +361,10 @@ class M implements haxe.Public
 		{
 			trace('D');
 		}
+		if ( Key.isDown( K.T ) )
+		{
+			enableSlow = true;
+		}
 		#end
 		
 		var stage = Lib.current.stage;
@@ -340,9 +375,11 @@ class M implements haxe.Public
 		tweenie.update();
 		fxMan.update();
 		
-		if ( 	char.spr.x > Tools.gw() * 0.5 
-		&& 		char.spr.x < Tools.lw()  - Tools.w()*0.5
-		)
+		var bnear = Tools.gw() * 0.5;
+		var bfar = Tools.lw()  - Tools.w() * 0.5;
+		
+		if ( 	char.spr.x >= bnear
+		&& 		char.spr.x <= bfar )
 		{
 			bbLevelRoot.x = Tools.gw() * 0.5 - char.spr.x;
 		}
@@ -352,10 +389,18 @@ class M implements haxe.Public
 		op.clear();//i sck
 		pix.Element.updateAnims();
 		
+		#if debug
+		if( Key.isDown(K.A) )
+		{
+			bbLevelRoot.x = 0;
+		}
+		#end
 		
 		if ( nextLevel != null)
 		{
-			setLevel( nextLevel); nextLevel = null;
+			setLevel( nextLevel);
+			bbLevelRoot.x = 0;
+			nextLevel = null;
 			M.char.pause = false;
 		}
 	}

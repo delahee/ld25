@@ -17,10 +17,30 @@
 	<level id="1">
 		<init>
 			<addDecrochage></addDecrochage><!-- tiles n°8 à répéter y=12-->
-			<addSprite pos="42,13" id="bus" front="true"></addSprite>
+			<addSprite pos="42,13" id="bus" layer="charFront"></addSprite>
 			<addSprite pos="8,12" id="light_01"></addSprite>
-			<addSprite pos="60,12" id="light_01"></addSprite>
+			<addSprite pos="62,12" id="light_01"></addSprite>
+			<addSprite pos="47,12" id="light_02"></addSprite>
+			<addSprite pos="44,12" id="light_01"></addSprite>
+			<addSprite pos="27,12" id="light_02"></addSprite>
 			<addSprite pos="9,12" id="trash"></addSprite>
+			<addSprite pos="36,12" id="bench" layer="charBack"></addSprite>
+			<addSprite pos="54,12" id="bench" layer="charBack"></addSprite>
+			
+			<peonGen pos="20,12"></peonGen>
+			<peonGen pos="12,0"></peonGen>
+			<peonGen pos="22,4"></peonGen>
+			<peonGen pos="6,12"></peonGen>
+			<peonGen pos="24,12"></peonGen>
+			<peonGen pos="33,12"></peonGen>
+			<peonGen pos="19,4" nb="1"></peonGen>
+			<peonGen pos="44,4" nb="1"></peonGen>
+			<peonGen pos="32,5"></peonGen>
+			<peonGen pos="37,5"></peonGen>
+			<peonGen pos="58,1"></peonGen>
+			<peonGen pos="44,12"></peonGen>
+			<peonGen pos="22,12"></peonGen>
+			<peonGen pos="66,12"></peonGen>
 		</init>
 		<enter>
 			<spawn>2,12</spawn>
@@ -28,14 +48,63 @@
 	</level>
 	
 	<level id="2">
-		<init> </init>
+		<init>
+			<addSprite pos="2,12" id="light_01"></addSprite>
+			<addSprite pos="39,12" id="light_01"></addSprite>
+			<addSprite pos="61,12" id="light_02"></addSprite>
+			<addSprite pos="25,12" id="light_02"></addSprite>
+			<addSprite pos="46,12" id="light_02"></addSprite>
+			<addSprite pos="54,12" id="light_01"></addSprite>
+			<addSprite pos="18,12" id="bench" layer="charBack"></addSprite>
+			<addSprite pos="40,12" id="bench" layer="charBack"></addSprite>
+			<addSprite pos="37,12" id="trash"></addSprite>
+			<addSprite pos="59,12" id="trash"></addSprite>
+			<addSprite pos="3,12" id="trash"></addSprite>
+			<addSprite pos="53,13" id="bus" layer="charFront"></addSprite>
+			
+			<peonGen pos="12,12"></peonGen>
+			<peonGen pos="36,12"></peonGen>
+			<peonGen pos="17,12"></peonGen>
+			<peonGen pos="23,12"></peonGen>
+			<peonGen pos="29,12"></peonGen>
+			<peonGen pos="12,2"></peonGen>
+			<peonGen pos="20,11"></peonGen>
+			<peonGen pos="41,11"></peonGen>
+			<peonGen pos="30,1"></peonGen>
+			<peonGen pos="44,4" nb="1"></peonGen>
+		</init>
 		<enter>
 			<spawn>2,12</spawn>
 		</enter>
 	</level>
 	
 	<level id="3">
-		<init></init>
+		<init>
+			<addSprite pos="40,13" id="bus" layer="charFront"></addSprite>
+			<addSprite pos="19,12" id="light_02"></addSprite>
+			<addSprite pos="36,12" id="light_01"></addSprite>
+			<addSprite pos="48,12" id="light_01"></addSprite>
+			<addSprite pos="65,12" id="light_02"></addSprite>
+			<addSprite pos="34,12" id="bench" layer="charBack"></addSprite>
+			<addSprite pos="38,12" id="trash"></addSprite>
+			<addSprite pos="17,12" id="trash"></addSprite>
+			<addSprite pos="65,12" id="trash"></addSprite>
+			
+			<peonGen pos="10,5"></peonGen>
+			<peonGen pos="4,12"></peonGen>
+			<peonGen pos="15,5"></peonGen>
+			<peonGen pos="24,2"></peonGen>
+			<peonGen pos="29,2"></peonGen>
+			<peonGen pos="53,4"></peonGen>
+			<peonGen pos="45,12"></peonGen>
+			<peonGen pos="45,12"></peonGen>
+			<peonGen pos="60,9" nb="1"></peonGen>
+			<peonGen pos="62,7" nb="1"></peonGen>
+			<peonGen pos="12,12"></peonGen>
+			<peonGen pos="48,5" nb="1"></peonGen>
+			<peonGen pos="25,7" nb="1"></peonGen>
+			<peonGen pos="42,10"></peonGen>
+		</init>
 		<enter>
 			<spawn>10,10</spawn>
 		</enter>
@@ -102,7 +171,7 @@
 	<!-- Batiment -->
 	<sprite id="building_0">
 		<state id="still" >
-			<slice coord="16,791,81,151" />
+			<slice coord="16,792,80,152" />
 		</state>
 	</sprite>
 	<sprite id="building_1">
@@ -168,9 +237,14 @@
 			<slice coord="480,640,16,128" />
 		</state>
 	</sprite>
-		<sprite id="bench">
+	<sprite id="bench">
 		<state id="still" >
 			<slice coord="320,592,64,32" />
+		</state>
+	</sprite>
+	<sprite id="sidewalk">
+		<state id="still" >
+			<slice coord="464,745,16,7" />
 		</state>
 	</sprite>
 	<!-- PNJ -->
@@ -260,15 +334,16 @@
 		
 		
 		<unit col="0xde0000" index="10" data="noBlock" />
-		<unit col="0xde3333" index="11"  />
+		<unit col="0x77ac7a" index="11"  />
 		<unit col="0xde6666" index="12" data="noBlock" />
 		<unit col="0xde9999" index="13" data="noBlock" />
 		
+		<unit col="0x27a2aa" index="14"/>
 		<unit col="0xC10000" index="15" />
-		<unit col="0xC13333" index="16"data="noBlock"/>
-		<unit col="0xC16666" index="17" />i
+		<unit col="0x9ee8a2" index="16"data="noBlock"/>
+		<unit col="0xC16666" index="17" />
 		<unit col="0xC19999" index="18" />
-		
+		<unit col="0x3bdfea" index="19" />
 		
 		<unit col="0xb8b8b8" index="21"/>
 		<unit col="0x8d8d8d" index="22"/>

@@ -59,24 +59,24 @@ class Char extends Entity
 				var a = spr.play("hero.attack");
 				a.loop = false;
 				a.onFinish = function() changeState(STAND);
-				attack();
+				attack(false);
 			
 			case AIR_ATTACK:	
 				var a = spr.play("hero.airAttack");
 				a.loop = false;
-				if (dy > 0) dy *=0.01;
+				if (dy > 0) dy -= 0.1;
 				hasAirAttacked = true;
 				a.onFinish = function() changeState(FALL);
-				attack();
+				attack(true);
 		}
 		stateLife = 0;
 		state = s;
 		//trace("changeState");
 	}
 	
-	public override function enterLevel(_)
+	public override function enterLevel(l:Level)
 	{
-		spr.toFront();
+		spr.putInFront(l.structure);
 	}
 	
 	public override function onLand()
@@ -93,20 +93,45 @@ class Char extends Entity
 	
 	static var attackcells = 
 	[ 
+		{x:0, y:-1 },
 		{x:0, y:0 },
 		{x:0, y:1 },
+		
+		{x:1, y:-1 },
 		{x:1, y:0 },
 		{x:1, y:1 },
+		
+		{x:2, y:-1 },
 		{x:2, y:0 },
 		{x:2, y:1 },
-		{x:3, y:0 },
-		{x:3, y:1 },
 	];
 	
-	public function attack()
+	static var airAttackcells = 
+	[ 
+		{x:0, y:-2 },
+		{x:0, y:-1 },
+		{x:0, y:0 },
+		{x:0, y:1 },
+		{x:0, y:2 },
+		
+		{x:1, y:-2 },
+		{x:1, y:-1 },
+		{x:1, y:0 },
+		{x:1, y:1 },
+		{x:1, y:2 },
+		
+		{x:2, y:-2 },
+		{x:2, y:-1 },
+		{x:2, y:0 },
+		{x:2, y:1 },
+		{x:2, y:2 },
+	];
+	
+	
+	public function attack(isAir)
 	{
 		var nb = 0;
-		for(c in attackcells)
+		for(c in isAir?airAttackcells:attackcells)
 		{
 			var m = dx > 0 ? 1 : -1;
 			
@@ -143,11 +168,11 @@ class Char extends Entity
 		{
 			default:
 			case JUMP:
+				if ( mt.deepnight.Key.isDown(K.UP) && stateLife <= 6 )
+					dy -= 0.015;
+				
 				if ( dy > 0)
-				{
-					//if( state != AIR_ATTACK )
 					changeState(FALL);
-				}
 			case AIR_ATTACK:
 				
 		}
@@ -172,13 +197,6 @@ class Char extends Entity
 			timer += dt;
 			prevT = g;
 			
-			//trace(dt+":"+M.fr);
-			
-			if ( dt <= 5 )
-			{
-				var a = 1531;
-			}
-			
 			if ( timer / 1000.0 > 112.0 )
 			{
 				M.terminate();
@@ -198,10 +216,11 @@ class Char extends Entity
 		if ( mt.deepnight.Key.isDown(K.UP) 
 		&& !hasJumped
 		&& !falling
-		&& (state == STAND || state == WALK)
-		&&	stateLife>15)
+		&& 	( ((state == STAND || state == WALK) &&	stateLife>15)
+			|| (state==FALL&&stateLife<=5))
+		)
 		{
-			dy -= 0.18;
+			dy -= 0.12;
 			hasJumped = true;
 			changeState(JUMP);
 		}
@@ -220,7 +239,7 @@ class Char extends Entity
 			{
 				dx -= baseX * control;
 				if ( dx < -mdx * control) dx = -mdx * 0.2 + 0.8 * dx;
-				if ( state == STAND )
+				if ( state == STAND && dx < -0.03)
 					changeState(WALK);
 			}
 			
@@ -228,7 +247,7 @@ class Char extends Entity
 			{
 				dx += baseX * control;
 				if ( dx > mdx * control) dx = mdx * 0.2 + 0.8 * dx;
-				if ( state == STAND )
+				if ( state == STAND && dx > 0.03)
 					changeState(WALK);
 			}
 		}

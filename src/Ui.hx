@@ -44,10 +44,11 @@ class Ui
 		score.x = 8;
 		score.y = 8;
 		score.filters = [ new flash.filters.GlowFilter(0x0, 1, 4, 4, 100)];
-		timer = getTf( "00:00", false );
+		timer = getTf( "00:00", true );
 		root.addChild(timer);
-		timer.x = Tools.gw() - 50;
+		timer.x = Tools.gw() -  timer.width;
 		timer.y = 8;
+		timer.filters = [ new flash.filters.GlowFilter(0x0, 1, 4, 4, 100)];
 		loweringScore = new Pool(
 			function()
 			{
@@ -167,7 +168,7 @@ class Ui
 	
 	public function getD()
 	{
-		return isMsgQueueFull() ? 0.6: 1.4;
+		return isMsgQueueFull() ? 0.8: 2.0;
 	}
 
 	public function mkMsg(str) : Msg

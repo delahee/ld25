@@ -12,6 +12,12 @@ class ScrollableBitmap extends Bitmap
 	}
 }
 
+enum SPRITE_LAYER
+{
+	SL_CHAR_FRONT;
+	SL_CHAR_BACK;
+}
+
 class Level 
 {
 	public var root : flash.display.Sprite;
@@ -34,12 +40,13 @@ class Level
 	var sky : Bitmap;
 	var scrolls0 : Array<ScrollableBitmap>;
 	var scrolls1 : Array<ScrollableBitmap>;
+	var scrolls2 : Array<ElementEx>;
 	
 	var props : List<ElementEx>;
 	var rd : volute.Rand;
 	var grid : flash.display.Shape;
 	
-	var structure:Bitmap;
+	public var structure:Bitmap;
 	
 	public function new(i) 
 	{
@@ -48,6 +55,7 @@ class Level
 		store = new IntHash<List<Entity>>();
 		scrolls0 = [];
 		scrolls1 = [];
+		scrolls2 = [];
 		props = new List<ElementEx>();
 		//init vars there
 		rd = new volute.Rand( (i * 32143574) ^ 0xdeadbeef );
@@ -58,25 +66,61 @@ class Level
 		spec(idx = i);
 		
 		#if debug
-		mkGrid();
+		//mkGrid();
 		#end
+	}
+	
+	public function kill()
+	{
+		structure.bitmapData.dispose();
+		structure = null;
+		
+		root.removeChildren();
+		root = null;
+		
+		light.bitmapData.dispose();
+		sky.bitmapData.dispose();
+		
+		for ( p in props)
+			p.kill();
+
+		for (s in scrolls0)
+			s.bitmapData.dispose();
+		
+		for (s in scrolls1)
+			s.bitmapData.dispose();
+			
+		for (s in scrolls2)
+			s.kill();
+		
+			
+		for ( s in store)
+			if (s != null)
+				for ( e in s )
+					e.kill();
 	}
 	
 	public function mkGrid()
 	{
 		grid = new flash.display.Shape();
+		
+		
 		for( y in 0...Tools.ch() )
 		{
 			for( x in 0...Tools.cw()*4 )
 			{
 				var gfx = grid.graphics;
 				
+				var isColl = staticTest( x, y);
+				if (isColl)
+					gfx.beginFill( 0xFF0000, 0.4);
 				gfx.lineStyle( 1,0x00FF00 );
 				gfx.moveTo(x * 16, y * 16);
 				gfx.lineTo((x + 1) * 16, y * 16);
 				gfx.lineTo((x + 1 )* 16, (y+1) * 16);
 				gfx.lineTo(x * 16, (y + 1) * 16);
 				gfx.lineStyle();
+				gfx.endFill();
 			}
 		}
 		
@@ -86,7 +130,7 @@ class Level
 		root.addEventListener(flash.events.MouseEvent.MOUSE_DOWN,
 		function(e:flash.events.MouseEvent)
 		{
-			trace(Std.int(e.localX / 16) + " " + Std.int(e.localY / 16));
+			trace("level:"+idx+" "+Std.int(e.localX / 16) + " " + Std.int(e.localY / 16));
 		});
 	}
 	
@@ -98,7 +142,7 @@ class Level
 					f(e);
 	}
 	
-	public function mkKey(cx, cy)
+	public inline function mkKey(cx, cy)
 	{
 		return (cx << 16) | cy;
 	}
@@ -143,10 +187,8 @@ class Level
 		}
 	}
 	
-	public function get(cx, cy)
-	{
-		return store.get( mkKey(cx, cy));
-	}
+	public inline function get(cx, cy)
+		return store.get( mkKey(cx, cy))
 	
 	public function add(e:Entity)
 	{
@@ -169,6 +211,7 @@ class Level
 			}
 		}
 	}
+	
 	public function enterLevel()
 	{
 		onEnterGd(idx);
@@ -189,19 +232,36 @@ class Level
 			s.putInFront( sky );
 		}
 		
-		for ( p in props )
+		for ( s in scrolls2) 
 		{
-			root.addChild( p );
-			if (p.data.isFront)
-				p.putInFront(structure);
-			else
-				p.putBehind(structure);
+			root.parent.parent.addChild( s );
+			s.putBehind( structure );
 		}
+		
+		M.char.enterLevel(this);
 		
 		for ( l in store)
 			if ( l != null)
 				for ( e in l ) 
-					e.enterLevel(this);
+					if( e != M.char )
+						e.enterLevel(this);
+					
+		
+		for ( p in props )
+		{
+			root.addChild( p );
+			if ( p.data.layer == null)
+				p.putBehind(structure);
+			else 
+			switch(p.data.layer)
+			{
+				case SL_CHAR_FRONT:
+				p.putInFront(M.char.el);
+				case SL_CHAR_BACK:
+				p.putBehind(M.char.el);
+			}
+		}
+		
 	}
 	
 	public function leaveLevel()
@@ -210,6 +270,7 @@ class Level
 		sky.detach();
 		for ( s in scrolls0) s.detach();
 		for ( s in scrolls1) s.detach();
+		for ( s in scrolls2) s.detach();
 	}
 	
 	public function remove(e:Entity, cx, cy)
@@ -265,6 +326,24 @@ class Level
 		
 		expand( scrolls0, new Data.BmpBg01(0, 0, false ));
 		expand( scrolls1, new Data.BmpBg02(0, 0, false ));
+		
+		var t = Tools.lw();
+		var n = 0;
+		while ( t > 0)
+		{
+			var b;
+			scrolls2.pushBack( b =
+			{
+				var e =new ElementEx();
+				e.goto( "sidewalk" );
+				e;
+			});
+			b.x += b.width * n -8;
+			b.y = 13 * 16;
+			//b.y = 20;
+			n++;
+			t -= Std.int(b.width);
+		}
 		
 		for (s in scrolls1)
 			s.y -= 35;
@@ -400,7 +479,7 @@ class Level
 			case lo("spawn"):
 				var s = cmd.innerData.split(',').map(Std.parseInt).array();
 				M.level.warp( M.char, s[0], s[1] );
-				//trace("spawning at " + s[0] + "," + s[1]);
+				M.char.syncPos();
 				
 			case lo('msg'):
 				var msg  = M.ui.mkMsg( cmd.innerHTML );
@@ -416,9 +495,96 @@ class Level
 				l.x = pos[0] * 16;
 				l.y = pos[1] * 16 + 16;
 				
-				l.data.isFront = cmd.has.front && cmd.att.front.toLowerCase() == 'true';
+				
+				var lay = !cmd.has.layer?null:
+				switch(cmd.att.layer.toLowerCase())
+				{
+					case "charfront":SL_CHAR_FRONT;
+					case "charback":SL_CHAR_BACK;
+				};
+				l.data.layer = lay;
 				
 				props.push( l );
+				
+			case lo('peonGen'):
+				var pos = cmd.att.pos.split(',').map(Std.parseInt).array();
+				
+				
+				var s = { x:pos[0], y:pos[1] };
+				var a = [ Reflect.copy(s) ];
+				var cont = true;
+				
+				var iter = 6;
+				while( cont )
+				{
+					s.x--;
+					if ( staticTest( s.x, s.y ))
+					{
+						cont = false;
+						break;
+					}
+					else
+						a.pushBack(Reflect.copy(s));
+						
+					iter--;
+					if (iter <= 0) break;
+				}
+				
+				var cont = true;
+				var iter = 6;
+				while( cont )
+				{
+					s.x++;
+					if ( staticTest( s.x, s.y ))
+					{
+						cont = false;
+						break;
+					}
+					else
+						a.pushBack(Reflect.copy(s));
+					iter--;
+					if (iter <= 0) break;
+				}
+				
+				var nb = 3;
+				if ( cmd.has.nb )
+					nb = Std.parseInt( cmd.att.nb );
+				
+				var oa = a.copy();
+				
+				for ( p in 0...nb)
+				{
+					var p = new Peon();
+					
+					if ( a.length == 0)
+						a = oa.copy();
+						
+					var idx = rd.random(a.length);
+					var ar =  a[idx];
+					a.removeByIndex(idx);
+					
+					var set = M.data.pnjPhrases.filter( function(s) return s.cat < 10);
+					var some = set.nth( rd.random(set.length) );
+					Tools.assert(some != null, "no more sentences for peon "+p );
+					M.data.pnjPhrases.remove( some );
+					switch(some.cat)
+					{
+						case 0 : 	M.data.mkChar( p.spr, "peon_female", "stand" );
+						case 1 : 	M.data.mkChar( p.spr, "peon_male", "stand" );
+						case 2: 	M.data.mkChar( p.spr, "peon_elder", "stand" );
+						case 3: 	M.data.mkChar( p.spr, "peon_granny", "stand" );
+						case 4: 	M.data.mkChar( p.spr, "peon_kid_male", "stand" );
+						case 5: 	M.data.mkChar( p.spr, "goat", "stand" );
+					}
+					p.pnjData =  some;
+							
+					p.cx = ar.x;
+					p.cy = ar.y;
+					p.rx = 0.05 + Math.random() * 0.85;
+					p.ry = 1.0;
+					
+					add(p);
+				}
 		}
 	}
 	
@@ -432,7 +598,27 @@ class Level
 			switch( cmd.name )
 			{
 				default:
-				case "init":  for( x in cmd.elements ) executeXMLCmd(x);
+				case "init": 
+					{
+						for ( x in cmd.elements ) executeXMLCmd(x);
+						
+						var nbPoints = 0;
+						var nbPeons = 0;
+						iterEntities(function(e)
+							if (e.type == ET_PEON )
+							{
+								var p : Peon = cast e;
+								if(p.pnjData!=null)
+								{
+									nbPoints += p.pnjData.score;
+									nbPeons++;
+								}
+								
+							});
+						#if debug	
+						trace('level ' + idx + " contains " + nbPoints + " and " + nbPeons + " peons");
+						#end
+					}
 				
 			}
 		}
@@ -490,11 +676,7 @@ class Level
 						}
 						else
 						{
-							var set = M.data.pnjPhrases.filter( function(s)
-							{
-								return s.cat == data.cat;
-							});
-							
+							var set = M.data.pnjPhrases.filter( function(s) return s.cat == data.cat);
 							var some = set.nth( rd.random(set.length) );
 							
 							Tools.assert(some != null, data.cat+" has no sentences" );

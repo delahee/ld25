@@ -28,6 +28,8 @@ class Main
 		bloomNode.rtRes = 0.5;
 	}
 	
+	
+	
 	public function addChild(c) return flash.Lib.current.addChild(c)
 	
 	static var prev = flash.Lib.getTimer();

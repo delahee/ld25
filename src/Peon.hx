@@ -17,6 +17,8 @@ class Peon extends Entity
 	var ph : Array<{bmp:Bitmap,bl:fx.BloodLine}>;
 	var slicing  = false;
 	var pnjData : PnjData;
+	var id :Int;
+	static var uid = 0;
 	
 	public function new() 
 	{
@@ -26,21 +28,20 @@ class Peon extends Entity
 		
 		M.data.mkChar( spr, "hero", "stand");
 		gravity = true;
+		id=uid++;
 	}
 	
 	static var sp  = 0;
 	public override function enterLevel(l)
 	{
 		super.enterLevel(l);
+		Tools.assert( pnjData != null);
+		
+		el.putBehind(M.char.el);
 		
 		if ( pnjData.score == 1 ) 
 			return;
 		
-		if( pnjData.score < 0 )
-			spr.filters = [ new flash.filters.GlowFilter(0xe5d254,1,8,8,2) ];
-		else
-			spr.filters = [ new flash.filters.GlowFilter(0x0, 1, 8, 8, 2) ];
-			
 		if( sp++ % 2 == 0)
 			spr.scaleX = -1;
 	}
@@ -163,8 +164,13 @@ class Peon extends Entity
 	
 	public override function kill()
 	{
-		for (p in ph)	p.bmp.bitmapData.dispose();
-		ph.clear();
-		l.remove2(this);
+		super.kill();
+		if (ph != null)
+		{
+			for (p in ph)	p.bmp.bitmapData.dispose();
+			ph.clear();
+		}
+		if(l!=null)
+			l.remove2(this);
 	}
 }
